@@ -1,0 +1,13 @@
+name: ozone_gap_filling
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=2.7.18
+  - numpy
+  - pandas
+  - matplotlib
+  - scipy
+  - nappy
+
