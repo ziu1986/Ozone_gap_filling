@@ -35,14 +35,17 @@ def init():
     # Concat data Svanvik data
     data.update({'svanvik_OzoNorClim':pd.concat(data_svanvik_OzoNorClim)})
     # Load regional model reanalysis 2018 and set time axis
-    data_rra = xr.open_dataset(src_rra)
-    data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
-    data.update({'rra':data_rra})
-
+    try:
+        data_rra = xr.open_dataset(src_rra)
+        data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
+        data.update({'rra':data_rra})
+    except 
+        print("Can'r load regional data please check your source directory!")
     return(data)
 
 def main():
-    print("Hello World!")
+    print("Ozone gap filling")
+    data = init()
 
 if __name__ == "__main__":
     main()
