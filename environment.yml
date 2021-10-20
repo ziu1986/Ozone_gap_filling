@@ -12,4 +12,5 @@ dependencies:
   - nappy
   - decorator
   - ipython
+  - xlrd
 
