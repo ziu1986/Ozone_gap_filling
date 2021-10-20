@@ -1,4 +1,25 @@
 # Tools for ozone_gap_filling
+def datetime_from_time(start_date, time):
+    '''
+    Returns np.array of datetime objects from list of EMAC time (days since yyyy-mm-dd 00:00).
+    Doesn't work for monthly mean.
+    '''
+    import numpy as np
+    import datetime as dt
+
+    # Getting hour from time
+    delta_time = int(round((time[2]-time[1])*24))
+    hour = (time-time.astype(int))*24 # np.array of floats
+    day = time.astype(int) # np.array
+    rHound = [] # round to full hour
+    
+    for iHour in hour:
+        rHound.append(int(round(iHour)))
+    minute = int(round((rHound[0]-hour[0])*60))
+     # Generate the date vector
+    dtime = np.array([ dt.timedelta(days=day[i], hours=hour[i], minutes=minute, seconds=0) for i in range(len(time)) ])
+    x_time = start_date + dtime
+    return x_time, delta_time
 
 def read_station_data_noaa(infile, **kargs):
     '''
@@ -9,10 +30,12 @@ def read_station_data_noaa(infile, **kargs):
             station - standard, southpole, other format
     '''
     import codecs
+    import datetime as dt
+    import pandas as pd
     # Key words
-    cdef int start_data = kargs.pop('start_data', 0)
-    cdef double utc = kargs.pop('utc', 0)
-    cdef int column = kargs.pop('column', 2)
+    start_data = kargs.pop('start_data', 0)
+    utc = kargs.pop('utc', 0)
+    column = kargs.pop('column', 2)
     station = kargs.pop('station', 'standard')
     # Reading data
     lines = codecs.open(infile, "r", 'utf-8').read().splitlines()
@@ -51,7 +74,11 @@ def read_station_data_ebas(infile, **kargs):
     '''
     Conversion of NASA aimes files from nilo.no data sets.
     '''
+    import numpy as np
+    import datetime as dt
+    import pandas as pd
     import nappy as nap # Read and write NASA data files
+
     # Open file (read header only)
     nas_file = nap.openNAFile(infile)
     # Read actual data
@@ -72,8 +99,8 @@ def read_station_data_ebas(infile, **kargs):
     # 1/2 for O3 (0.5)
     # ca. 0.38 for SO2 
     # ca. 0.81 for NO
-    cdef double M_air = 28.949                        # [g/mol] 
-    cdef double air_dens_25 = 1.1839                  # [kg/m3]
+    M_air = 28.949                        # [g/mol] 
+    air_dens_25 = 1.1839                  # [kg/m3]
     mass_fraction = {'O3':3*15.9994/M_air,
                      'SO2':32.065/M_air,# ug(S)/m3
                      'SO4':32.065/M_air,
@@ -148,6 +175,38 @@ def load_data(src, **karg):
     # Round to full hours
     data.index = data.index.round("h")
     return(data)
+
+def time_lagged_corr(test_data, truth, **kargs):
+    '''
+    Compute time lagged correlation and returns correlation cooeficient.
+    Takes test_data, truth as arguments. test_data is the one that gets shifted.
+    kwargs:
+       lag (0) - the time-lag in hours (can be positive or negative)
+       v (False) - be a bit more verbose
+       pandas (False) - use pandas dataframe object as input instead of numpy arrays
+    '''
+    import numpy as np
+    import pandas as pd
+
+    lag = kargs.pop('lag',0)
+    verbose = kargs.pop('v', False)
+    pandas = kargs.pop('pandas', False)
+    if pandas:
+        corr_coef = truth.corr(test_data.shift(lag))
+        if verbose:
+            corr_sign = corr_coef*np.sqrt((len(test_data)-np.fabs(lag)-2)/(1-corr_coef**2))
+            print "%d %d %1.2f -> %2.2f" % (lag, len(test_data), corr_coef, corr_sign)
+        return(corr_coef)
+    else:
+        if lag >= 0:
+            corr_coef = np.ma.corrcoef(np.roll(test_data, lag)[lag:], truth[lag:])
+        else:
+            corr_coef = np.ma.corrcoef(np.roll(test_data, lag)[:lag], truth[:lag])
+        corr_sign = corr_coef[0,1]*np.sqrt((len(test_data)-np.fabs(lag)-2)/(1-corr_coef[0,1]**2))
+        if verbose:
+            print "%d %d %1.2f -> %2.2f" % (lag, len(test_data), corr_coef[0,1], corr_sign)
+        return corr_coef
+
 
 def main():
     print("Tools for ozone_gap_filling")
