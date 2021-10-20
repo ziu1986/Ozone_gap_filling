@@ -207,6 +207,57 @@ def time_lagged_corr(test_data, truth, **kargs):
             print "%d %d %1.2f -> %2.2f" % (lag, len(test_data), corr_coef[0,1], corr_sign)
         return corr_coef
 
+def compute_climatology(data, **karg):
+    '''
+    Compute daily ozone climatology from observation.
+    Parameters
+    ----------
+    data : pandas Timeseries
+    Keyword arguments
+    -----------------
+    mode : string
+        mean: Compute mean climatology (default).
+        min/max: Climatology of daily min/max.
+        hourly: Compute hourly climatology.
+    Returns
+    -------
+    clim_ozone : pandas Timeseries
+        Daily ozone climatology.
+    clim_ozone_std : pandas Timeseries
+        Uncertainty on daily ozone climatology.
+    clim_ozone_stderr : pandas Timeseries
+        Standard error on daily ozone climatology.
+    '''
+    import numpy as np
+    import pandas as pd
+    mode = karg.pop("mode", "mean")
+    if mode=="mean":
+        clim_ozone = data.groupby(data.index.dayofyear).apply(np.nanmean)
+        clim_ozone_std = data.groupby(data.index.dayofyear).apply(np.nanstd)
+        clim_ozone_stderr = data.groupby(data.index.dayofyear).apply(lambda x: x.mean()/np.sqrt(x.count()))
+    elif mode=='max':
+        data_res = data.resample("1D").apply(np.nanmax)
+        clim_ozone = data_res.groupby(data_res.index.dayofyear).apply(np.nanmean)
+        clim_ozone_std = data_res.groupby(data_res.index.dayofyear).apply(np.nanstd)
+        clim_ozone_stderr = data_res.groupby(data_res.index.dayofyear).apply(lambda x: x.mean()/np.sqrt(x.count()))
+    elif mode=='min':
+        data_res = data.resample("1D").apply(np.nanmin)
+        clim_ozone = data_res.groupby(data_res.index.dayofyear).apply(np.nanmean)
+        clim_ozone_std = data_res.groupby(data_res.index.dayofyear).apply(np.nanstd)
+        clim_ozone_stderr = data_res.groupby(data_res.index.dayofyear).apply(lambda x: x.std()/np.sqrt(x.count()))
+    elif mode=='hourly':
+        tmp = pd.DataFrame({'O3':data.values}, index=data.index)
+        #creating the hour, day, month, & day columns
+        tmp.loc[:,'hour'] = tmp.index.hour.values
+        tmp.loc[:,'day'] = tmp.index.day.values
+        tmp.loc[:,'month'] = tmp.index.month.values
+
+        #create groups and calculate the mean of each group
+        clim_ozone = tmp.groupby(['month','day','hour']).mean()
+        clim_ozone_std = tmp.groupby(['month','day','hour']).std()
+        clim_ozone_stderr = tmp.groupby(['month','day','hour']).apply(lambda x: x.std()/np.sqrt(x.count()))
+
+    return(clim_ozone, clim_ozone_std, clim_ozone_stderr)
 
 def main():
     print("Tools for ozone_gap_filling")
