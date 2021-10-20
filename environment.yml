@@ -10,5 +10,6 @@ dependencies:
   - matplotlib
   - scipy
   - nappy
+  - decorator
   - ipython
 
