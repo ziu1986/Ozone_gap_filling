@@ -14,12 +14,12 @@ def init():
     # Input directories
     src = os.environ['DATA']+'/astra/observations/ozone/'
     src_svanvik_OzoNorClim = src + '/Svanvik/NO0047R.*ozone*.xls'
-    src_stations = ('Esrange', 'Jergul', 'Karasjok', 'Pallas', 'Svanvik')
+    station_list = ('Esrange', 'Jergul', 'Karasjok', 'Pallas', 'Svanvik')
     src_rra = os.environ['DATA']+'/nird/reanalysis/Copernicus/ensemble_ozone/SCA_ENSa.2018.O3.yearlyrea.nc'
     # Read data
     try:    
         data = {}
-        for station in src_stations:
+        for station in station_list:
             if station=='Barrow':
                 data.update({station:load_data(src+station+'/*', type="Barrow")})
             else:
@@ -39,14 +39,19 @@ def init():
     try:
         data_rra = xr.open_dataset(src_rra)
         data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
-        #data_svanvik_rra = (data_rra.sel(lat=station_location['Svanvik'].lat, lon=station_location['Svanvik'].lon, method='nearest', time='2018-07')['O3']*0.5)
         data.update({'rra':data_rra})
     except NameError:
         print("Warning: Can't load regional data please check your source directory!")
     return(data)
 
+def extract_station_data(data, station_list):
+    from bin.station_info import station_location
+    local_rra = {}
+    for each in station_list:
+        local_rra.update({each:data['rra'].sel(lat=station_location[each].lat, lon=station_location[each].lon, method='nearest', time='2018-07')['O3']*0.5})
+    return(local_rra)
+
 def compute_time_lag(data):
-    # Time lags -> fig6
     time_lag = range(-32,33)
     lag_jergkara_esrange = []
     lag_jergkara_pallas = []
