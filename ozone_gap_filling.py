@@ -17,15 +17,15 @@ def init():
     src_stations = ('Esrange', 'Jergul', 'Karasjok', 'Pallas', 'Svanvik')
     src_rra = os.environ['DATA']+'/nird/reanalysis/Copernicus/ensemble_ozone/SCA_ENSa.2018.O3.yearlyrea.nc'
     # Read data
-    try:
-        data
-    except NameError:
+    try:    
         data = {}
         for station in src_stations:
             if station=='Barrow':
                 data.update({station:load_data(src+station+'/*', type="Barrow")})
             else:
                 data.update({station:load_data(src+station+'/*.nas')})
+    except NameError:
+        sys.exit("Can't load ozone station data please check your source directory!")
     # Concate Jergul and Karasjok data
     data.update({'jergkara':pd.concat((data['Jergul'], data['Karasjok']))})
     # Read and convert xls file data
@@ -41,7 +41,7 @@ def init():
         data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
         data.update({'rra':data_rra})
     except NameError:
-        print("Can't load regional data please check your source directory!")
+        print("Warning: Can't load regional data please check your source directory!")
     return(data)
 
 def compute_time_lag(data):
