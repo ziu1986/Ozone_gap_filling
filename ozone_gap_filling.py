@@ -39,7 +39,7 @@ def init():
     try:
         data_rra = xr.open_dataset(src_rra)
         data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
-        data_svanvik_rra = (data_rra.sel(lat=station_location['Svanvik'].lat, lon=station_location['Svanvik'].lon, method='nearest', time='2018-07')['O3']*0.5)
+        #data_svanvik_rra = (data_rra.sel(lat=station_location['Svanvik'].lat, lon=station_location['Svanvik'].lon, method='nearest', time='2018-07')['O3']*0.5)
         data.update({'rra':data_rra})
     except NameError:
         print("Warning: Can't load regional data please check your source directory!")
