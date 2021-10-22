@@ -39,6 +39,7 @@ def init():
     try:
         data_rra = xr.open_dataset(src_rra)
         data_rra['time'] = pd.date_range("2018-01-01", periods=365*24, freq='H')
+        data_svanvik_rra = (data_rra.sel(lat=station_location['Svanvik'].lat, lon=station_location['Svanvik'].lon, method='nearest', time='2018-07')['O3']*0.5)
         data.update({'rra':data_rra})
     except NameError:
         print("Warning: Can't load regional data please check your source directory!")
@@ -122,7 +123,7 @@ def sample_climatology(clim, clim_svanvik):
 
 def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias_corr = 1.2):
     # Bias correction for historical climatology to present day
-    # Time lag corection (same for Esrange and Pallas)
+    # Time lag correction (same for Esrange and Pallas)
     time_lag_corr = lag_max['svanvik_esrange']
 
     # Scaling factor
@@ -134,10 +135,12 @@ def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias
     reco_anomaly_svanvik = anomaly_pallas.shift(-time_lag_corr)*scaling['07-2018'][0]
     reco_svanvik = reco_anomaly_svanvik+sample_clim_svanvik['2018-07'][0]+bias_corr
 
-    return(plot_reco(data, sample_clim, sample_clim_svanvik, anomaly_pallas, anomaly_esrange, anomaly_svanvik, reco_anomaly_svanvik, reco_svanvik, time_lag_corr))
+    anomalies = {'Pallas': anomaly_pallas, 'Esrange':anomaly_esrange, 'Svanvik':anomaly_svanvik, 'Svanvik_reco':reco_anomaly_svanvik}
+
+    return(anomalies, reco_svanvik, time_lag_corr)
 
 
-def plot_reco(data, sample_clim, sample_clim_svanvik, anomaly_pallas, anomaly_esrange, anomaly_svanvik, reco_anomaly_svanvik, reco_svanvik, time_lag_corr):
+def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr):
     fig1 = plt.figure(1, figsize=(10,12))
     fig1.canvas.set_window_title("ozone_reconstruction_2018_07")
     ax11 = plt.subplot(311)
@@ -158,11 +161,11 @@ def plot_reco(data, sample_clim, sample_clim_svanvik, anomaly_pallas, anomaly_es
     #
     ax12 = plt.subplot(312)
     ax12.set_title('(b)')
-    anomaly_pallas.plot(ax=ax12, ls='None', marker='^', fillstyle='none', color='black', label="Pallas")
-    anomaly_esrange.plot(ax=ax12, ls='None', marker='o', fillstyle='none', color='blue', label="Esrange")
+    anomalies['Pallas'].plot(ax=ax12, ls='None', marker='^', fillstyle='none', color='black', label="Pallas")
+    anomalies['Esrange'].plot(ax=ax12, ls='None', marker='o', fillstyle='none', color='blue', label="Esrange")
 
-    anomaly_svanvik.plot(ax=ax12, ls='None', color='blueviolet', label='Svanvik', marker='d')
-    reco_anomaly_svanvik.plot(ax=ax12, color='magenta', label='Reco. Svanvik')
+    anomalies['Svanvik'].plot(ax=ax12, ls='None', color='blueviolet', label='Svanvik', marker='d')
+    anomalies['Svanvik_reco'].plot(ax=ax12, color='magenta', label='Reco. Svanvik')
 
     ax12.set_ylabel("$\Delta [O_3]$ (ppb)")
     #ax12.set_xlabel("Time (days)")
@@ -201,8 +204,9 @@ def main():
 
     sample_clim, sample_clim_svanvik = sample_climatology(clim['clim'], clim_svanvik['clim'])
 
-    compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max)
+    anomalies, reco_svanvik, time_lag_corr = compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max)
 
+    fig = plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr)
     plt.show(block=False)
 
 if __name__ == "__main__":
