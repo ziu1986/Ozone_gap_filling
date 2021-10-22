@@ -93,14 +93,14 @@ def compute_clim(data):
     from scipy.interpolate import UnivariateSpline
     # Fennoscandic climatology
     w = 1/yerr_mean
-    fitSpl_dmean = UnivariateSpline(np.unique(doys), climatology.groupby(climatology.index.dayofyear).apply(np.nanmean), w=w)
+    fitSpl_dmean = UnivariateSpline(doys, climatology.groupby(climatology.index.dayofyear).apply(np.nanmean), w=w)
     dmax = climatology.resample('1d').apply(np.nanmax)
-    fitSpl_dmax = UnivariateSpline(np.unique(doys), dmax.groupby(dmax.index.dayofyear).apply(np.nanmean))
+    fitSpl_dmax = UnivariateSpline(doys, dmax.groupby(dmax.index.dayofyear).apply(np.nanmean))
     # Svanvik
     w_svanvik = 1/yerr_mean_svanvik
-    fitSpl_dmean_svanvik = UnivariateSpline(np.unique(doys_svanvik), data['Svanvik'].groupby(data['Svanvik'].index.dayofyear).apply(np.nanmean), w=w_svanvik)
+    fitSpl_dmean_svanvik = UnivariateSpline(doys, data['Svanvik'].groupby(data['Svanvik'].index.dayofyear).apply(np.nanmean), w=w_svanvik)
     dmax_svanvik = data['Svanvik'].resample('1d').apply(np.nanmax)
-    fitSpl_dmax_svanvik = UnivariateSpline(np.unique(doys_svanvik), dmax_svanvik.groupby(dmax_svanvik.index.dayofyear).apply(np.nanmean))
+    fitSpl_dmax_svanvik = UnivariateSpline(doys, dmax_svanvik.groupby(dmax_svanvik.index.dayofyear).apply(np.nanmean))
     
     # Pickle splines for comparison with other data
     import pickle
@@ -112,29 +112,83 @@ def compute_clim(data):
         pickle.dump(yerr_mean_svanvik, output, pickle.HIGHEST_PROTOCOL)
 
     return({'clim':clim_hourly, 'clim_err':clim_hourly_err, 'clim_err_mean':clim_hourly_err_mean}, 
-            {'clim':clim_hourly_svanvik, 'clim_err':clim_hourly_err_svanvik, 'clim_err_std':clim_hourly_err_mean_svanvik})
+            {'clim':clim_hourly_svanvik, 'clim_err':clim_hourly_err_svanvik, 'clim_err_mean':clim_hourly_err_mean_svanvik})
 
 def sample_climatology(clim, clim_svanvik):
     # Sample from houerly climatology
-    sample_clim_hourly_svanvik = pd.DataFrame(pd.concat((clim_hourly_svanvik.iloc[:(31+28)*24],clim_hourly_svanvik.iloc[(31+29)*24:])).values, index=pd.date_range("2018-01-01 0:0", "2018-12-31 23:0", freq='H'))
-    sample_clim_hourly_err_svanvik = pd.DataFrame(pd.concat((clim_hourly_err_svanvik.iloc[:(31+28)*24],clim_hourly_err_svanvik.iloc[(31+29)*24:])).values, index=pd.date_range("2018-01-01 0:0", "2018-12-31 23:0", freq='H'))
-    sample_clim_hourly = pd.DataFrame(pd.concat((clim_hourly.iloc[:(31+28)*24],clim_hourly.iloc[(31+29)*24:])).values, index=pd.date_range("2018-01-01 0:0", "2018-12-31 23:0", freq='H'))
+    sample_clim_svanvik = pd.DataFrame(pd.concat((clim_svanvik.iloc[:(31+28)*24],clim_svanvik.iloc[(31+29)*24:])).values, index=pd.date_range("2018-01-01 0:0", "2018-12-31 23:0", freq='H'))
+    sample_clim = pd.DataFrame(pd.concat((clim.iloc[:(31+28)*24],clim.iloc[(31+29)*24:])).values, index=pd.date_range("2018-01-01 0:0", "2018-12-31 23:0", freq='H'))
+    return(sample_clim, sample_clim_svanvik)
 
-
-def compute_reconstruction(sample_clim_hourly, lag_max, bias_corr = 1.2):
+def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias_corr = 1.2):
     # Bias correction for historical climatology to present day
     # Time lag corection (same for Esrange and Pallas)
     time_lag_corr = lag_max['svanvik_esrange']
 
     # Scaling factor
-    scaling = sample_clim_hourly_svanvik/sample_clim_hourly.shift(-time_lag_corr)
-    anomaly_pallas = data['Pallas']['07-2018']-sample_clim_hourly['07-2018'][0]
-    anomaly_esrange = data['Esrange']['07-2018']-sample_clim_hourly['07-2018'][0]
-    anomaly_svanvik = data_svanvik_OzoNorClim['2018-07']-sample_clim_hourly_svanvik[0][data_svanvik_OzoNorClim['2018-07'].index]-bias_corr
+    scaling = sample_clim_svanvik/sample_clim.shift(-time_lag_corr)
+    anomaly_pallas = data['Pallas']['07-2018']-sample_clim['07-2018'][0]
+    anomaly_esrange = data['Esrange']['07-2018']-sample_clim['07-2018'][0]
+    anomaly_svanvik = data['svanvik_OzoNorClim']['2018-07']-sample_clim_svanvik[0][data['svanvik_OzoNorClim']['2018-07'].index]-bias_corr
 
     reco_anomaly_svanvik = anomaly_pallas.shift(-time_lag_corr)*scaling['07-2018'][0]
-    reco_svanvik = reco_anomaly_svanvik+sample_clim_hourly_svanvik['2018-07'][0]+bias_corr
+    reco_svanvik = reco_anomaly_svanvik+sample_clim_svanvik['2018-07'][0]+bias_corr
 
+    return(plot_reco(data, sample_clim, sample_clim_svanvik, anomaly_pallas, anomaly_esrange, anomaly_svanvik, reco_anomaly_svanvik, reco_svanvik, time_lag_corr))
+
+
+def plot_reco(data, sample_clim, sample_clim_svanvik, anomaly_pallas, anomaly_esrange, anomaly_svanvik, reco_anomaly_svanvik, reco_svanvik, time_lag_corr):
+    fig1 = plt.figure(1, figsize=(10,12))
+    fig1.canvas.set_window_title("ozone_reconstruction_2018_07")
+    ax11 = plt.subplot(311)
+    ax11.set_title('(a)')
+
+    data['Esrange']['2018-07'].plot(ax=ax11, ls='None', marker='o', fillstyle='none', color='blue', label="Esrange")
+    data['Pallas']['2018-07'].plot(ax=ax11, ls='None', marker='^', fillstyle='none', color='black', label="Pallas")
+    data['svanvik_OzoNorClim']['2018-07'].plot(ax=ax11, color='blueviolet', ls='None', marker='d', label='Svanvik')
+    sample_clim['07-2018'][0].plot(ax=ax11, color='red', label="Hourly clim.")
+    sample_clim.shift(-time_lag_corr)['2018-07'][0].plot(ax=ax11, color='red', ls='--', label="Hourly clim. + time lag corr.")
+    sample_clim_svanvik['07-2018'][0].plot(ax=ax11, color='red', ls='-.', label="Hourly clim. Svanvik")
+
+    ax11.set_ylabel("$[O_3] (ppb)$")
+    ax11.set_ylim(0,75)
+    ax11.set_xticklabels("")
+    ax11.set_xlabel('')
+    ax11.legend(ncol=2)
+    #
+    ax12 = plt.subplot(312)
+    ax12.set_title('(b)')
+    anomaly_pallas.plot(ax=ax12, ls='None', marker='^', fillstyle='none', color='black', label="Pallas")
+    anomaly_esrange.plot(ax=ax12, ls='None', marker='o', fillstyle='none', color='blue', label="Esrange")
+
+    anomaly_svanvik.plot(ax=ax12, ls='None', color='blueviolet', label='Svanvik', marker='d')
+    reco_anomaly_svanvik.plot(ax=ax12, color='magenta', label='Reco. Svanvik')
+
+    ax12.set_ylabel("$\Delta [O_3]$ (ppb)")
+    #ax12.set_xlabel("Time (days)")
+    ax12.set_ylim(-30, 30)
+    ax12.set_xticklabels("")
+    ax12.set_xlabel('')
+    ax12.legend(ncol=2)
+
+    #fig2 = plt.figure(2, figsize=(16,9))
+    #fig2.canvas.set_window_title("ozone_reconstruction_svanvik")
+    ax13 = plt.subplot(313)
+    ax13.set_title('(c)')
+
+    reco_svanvik.plot(ax=ax13, ls='-', color='magenta', marker='None', label='Reco. Svanvik')
+    data['svanvik_OzoNorClim']['2018-07'].plot(ax=ax13, color='blueviolet', fillstyle='none', ls='None', marker='d', label='Svanvik')
+    try :
+        data['svanvik_rra'].to_pandas().plot(ax=ax13, color='grey', fillstyle='none', ls=':', linewidth=2.5, label='CAMSRAQ')
+    except KeyError:
+        print("Warning: No regional data loaded!")
+
+    ax13.set_ylabel("$[O_3] (ppb)$")
+    ax13.set_ylim(0,75)
+    ax13.set_xlabel('Time (days)')
+    ax13.legend(ncol=3)
+
+    return(fig1)
 
 def main():
     print("Ozone gap filling")
@@ -144,6 +198,12 @@ def main():
 
     clim, clim_svanvik = compute_clim(data)
     print(clim.keys(), clim_svanvik.keys())
+
+    sample_clim, sample_clim_svanvik = sample_climatology(clim['clim'], clim_svanvik['clim'])
+
+    compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max)
+
+    plt.show(block=False)
 
 if __name__ == "__main__":
     main()
