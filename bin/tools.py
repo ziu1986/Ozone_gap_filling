@@ -259,6 +259,36 @@ def compute_climatology(data, **karg):
 
     return(clim_ozone, clim_ozone_std, clim_ozone_stderr)
 
+def print_all(**kargs):
+    '''
+    Plot all active figures. 
+    Make sure all windows have a meaningfull name:
+    Use fig.canvas.set_window_title()!
+    Keyword arguments
+    -----------------
+    target : string
+        Directory to save plots to. Standard: './plots'
+    type : tuple of strings
+        The types the plot hsall be saved as.
+        Standard: ('pdf', 'svg', 'png')
+    '''
+    import matplotlib.pyplot as plt
+    import os
+    
+    fig_path = kargs.pop('target', './plots')
+    file_type = kargs.pop('type', ('pdf','svg','png'))
+    # Check if directory exists
+    if not os.path.isdir(fig_path):
+        os.mkdir(fig_path)
+    for i in plt.get_fignums():
+        fig = plt.figure(i)
+        w_title = fig.canvas.get_window_title()
+        print("Print " + w_title)
+        for itype in file_type:
+            if not os.path.isdir(fig_path+'/'+itype):
+                os.mkdir(fig_path+'/'+itype)
+            fig.savefig(fig_path+'/'+itype+'/'+w_title+'.'+itype)
+
 def main():
     print("Tools for ozone_gap_filling")
 
