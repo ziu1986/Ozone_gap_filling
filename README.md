@@ -13,7 +13,8 @@ Activate environment
 
 ## Release note
 -------------
-v.1.0 
+### v.1.0
+
 This Repository contains the functions and workflow to use Reynolds decomposition on ozone monitoring data.
 All functions were optimized for python 2.7.
 
