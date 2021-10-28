@@ -10,8 +10,8 @@ dependencies:
   - matplotlib
   - scipy
   - nappy
-  - decorator
-  - ipython
   - xlrd
   - pyyaml
+  - ipython
+  
 
