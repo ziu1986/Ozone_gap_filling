@@ -146,8 +146,8 @@ def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias
 
 
 def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr):
-    fig1 = plt.figure(1, figsize=(10,12))
-    fig1.canvas.set_window_title("ozone_reconstruction_2018_07")
+    fig = plt.figure(1, figsize=(10,12))
+    fig.canvas.set_window_title("ozone_reconstruction_2018_07")
     ax11 = plt.subplot(311)
     ax11.set_title('(a)')
 
@@ -163,24 +163,20 @@ def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, t
     ax11.set_xticklabels("")
     ax11.set_xlabel('')
     ax11.legend(ncol=2)
-    #
+    
     ax12 = plt.subplot(312)
     ax12.set_title('(b)')
     anomalies['Pallas'].plot(ax=ax12, ls='None', marker='^', fillstyle='none', color='black', label="Pallas")
     anomalies['Esrange'].plot(ax=ax12, ls='None', marker='o', fillstyle='none', color='blue', label="Esrange")
-
     anomalies['Svanvik'].plot(ax=ax12, ls='None', color='blueviolet', label='Svanvik', marker='d')
     anomalies['Svanvik_reco'].plot(ax=ax12, color='magenta', label='Reco. Svanvik')
 
     ax12.set_ylabel("$\Delta [O_3]$ (ppb)")
-    #ax12.set_xlabel("Time (days)")
     ax12.set_ylim(-30, 30)
     ax12.set_xticklabels("")
     ax12.set_xlabel('')
     ax12.legend(ncol=2)
 
-    #fig2 = plt.figure(2, figsize=(16,9))
-    #fig2.canvas.set_window_title("ozone_reconstruction_svanvik")
     ax13 = plt.subplot(313)
     ax13.set_title('(c)')
 
@@ -196,7 +192,7 @@ def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, t
     ax13.set_xlabel('Time (days)')
     ax13.legend(ncol=3)
 
-    return(fig1)
+    return(fig)
 
 def main():
     print("Ozone gap filling")
