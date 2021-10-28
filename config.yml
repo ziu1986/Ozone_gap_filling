@@ -1,7 +1,7 @@
 sources:
   ebas_ozone: '/data/astra/observations/ozone/'
   svanvik_ozone: '/data/astra/observations/ozone/Svanvik/NO0047R.*ozone*.xls'
-  rra_ozone: '/data/nird/reanalysis/Copernicus/ensemble_ozone/SCA_ENSa.2018.O3.yearlyrea.nc'
+  regional_ozone: '/data/nird/reanalysis/Copernicus/ensemble_ozone/SCA_ENSa.2018.O3.yearlyrea.nc'
 
 station_list:
   - 'Esrange'
