@@ -1,6 +1,7 @@
 # Gap filling workflow
 import matplotlib.pyplot as plt # Plotting
 from bin.ogf_func import *
+from bin.tools import print_all
 
 def main():
     print("Ozone gap filling")
@@ -17,7 +18,7 @@ def main():
 
     plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr)
     
-    plot_all()
+    print_all()
 
 if __name__ == "__main__":
     main()
