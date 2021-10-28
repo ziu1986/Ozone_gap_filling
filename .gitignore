@@ -1,0 +1,9 @@
+# Compiled source #
+###################
+*.pyc
+
+# Results #
+###########
+*.pkl
+*.png
+*.pdf
