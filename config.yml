@@ -9,3 +9,6 @@ station_list:
   - 'Karasjok'
   - 'Pallas'
   - 'Svanvik'
+
+workflow:
+  - 'reconstruction'
