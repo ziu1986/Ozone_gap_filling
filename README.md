@@ -3,10 +3,13 @@ Reynolds decomposition for gap filling of ozone data.
 
 ## Installation
 -------------
-Download and install e.g. anaconda and run: 
-conda env create -f environment.yml
+Download and install e.g. anaconda and run:
+
+`conda env create -f environment.yml`
+
 Activate environment
-conda activate ozone_gap_filling
+
+`conda activate ozone_gap_filling`
 
 ## Release note
 -------------
