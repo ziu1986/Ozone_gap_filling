@@ -13,5 +13,5 @@ dependencies:
   - decorator
   - ipython
   - xlrd
-  - yaml
+  - pyyaml
 
