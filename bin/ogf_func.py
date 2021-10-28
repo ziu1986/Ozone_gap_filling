@@ -9,14 +9,15 @@ from scipy import fftpack
 from scipy import stats
 from bin.tools import *
 
-def init():
+def init(config_file):
     # Read configuration
-    with open(r'config.yml') as file:
+    with open(r'%s' % config_file) as file:
         config_list = yaml.load(file, Loader=yaml.FullLoader)
     src = config_list['sources']['ebas_ozone']
     src_svanvik_OzoNorClim = config_list['sources']['svanvik_ozone']
     src_rra = config_list['sources']['regional_ozone']
     station_list = config_list['station_list']
+    workflow = config_list['workflow']
     file.close()
     # Read data
     try:    
@@ -44,7 +45,7 @@ def init():
         data.update({'rra':data_rra})
     except NameError:
         print("Warning: Can't load regional data please check your source directory!")
-    return(data)
+    return(data, workflow)
 
 def extract_station_data(data, station_list):
     from bin.station_info import station_location
@@ -149,7 +150,7 @@ def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias
 
 def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr):
     import matplotlib.pyplot as plt
-    
+
     fig = plt.figure(1, figsize=(10,12))
     fig.canvas.set_window_title("ozone_reconstruction_2018_07")
     ax11 = plt.subplot(311)
