@@ -28,6 +28,9 @@ Ozone monitoring data as obtained from ebas.nilu.no.
 Copernicus regional ozone reanalysis as obtained from [Copernicus regional air monitoring](https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=form) and 
 the annual mean was computed using cdo/nco tool kits.
 
+## Workflows
+Currently there is only the "reconstruction" workflow defined.
+
 ## Running
 -----------
 You can run directly from the command line
