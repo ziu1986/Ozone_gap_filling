@@ -11,6 +11,10 @@ Activate environment
 
 `conda activate ozone_gap_filling`
 
+To use ipython once the environment is installed, the python module `decorator` has to be installed by hand.
+
+`conda install -n ozone_gap_filling decorator`
+
 ## Release note
 -------------
 ### v.1.0
