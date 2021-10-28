@@ -15,8 +15,9 @@ def main():
 
     anomalies, reco_svanvik, time_lag_corr = compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max)
 
-    fig = plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr)
-    plt.show(block=False)
+    plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr)
+    
+    plot_all()
 
 if __name__ == "__main__":
     main()
