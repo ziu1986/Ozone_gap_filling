@@ -1,7 +1,8 @@
-import os, glob, sys
+import os, glob, sys, io
 import numpy as np
 import pandas as pd             # Timeseries data
 import datetime as dt           # Time manipulation
+import yaml
 from matplotlib.dates import date2num # Convert dates to matplotlib axis coords
 from matplotlib import dates
 from scipy import fftpack
@@ -9,11 +10,14 @@ from scipy import stats
 from bin.tools import *
 
 def init():
-    # Input directories
-    src = os.environ['DATA']+'/astra/observations/ozone/'
-    src_svanvik_OzoNorClim = src + '/Svanvik/NO0047R.*ozone*.xls'
-    station_list = ('Esrange', 'Jergul', 'Karasjok', 'Pallas', 'Svanvik')
-    src_rra = os.environ['DATA']+'/nird/reanalysis/Copernicus/ensemble_ozone/SCA_ENSa.2018.O3.yearlyrea.nc'
+    # Read configuration
+    with open(r'config.yml') as file:
+        config_list = yaml.load(file, Loader=yaml.FullLoader)
+    src = config_list['sources']['ebas_ozone']
+    src_svanvik_OzoNorClim = config_list['sources']['svanvik_ozone']
+    src_rra = config_list['sources']['regional_ozone']
+    station_list = config_list['station_list']
+    file.close()
     # Read data
     try:    
         data = {}
@@ -191,3 +195,9 @@ def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, t
     ax13.legend(ncol=3)
 
     return(fig)
+
+def main():
+    print("Tool kit for ozone gap filling")
+
+if __name__ == "__main__":
+    main()
