@@ -151,7 +151,7 @@ def compute_reconstruction(data, sample_clim, sample_clim_svanvik, lag_max, bias
 def plot_reco(data, sample_clim, sample_clim_svanvik, anomalies, reco_svanvik, time_lag_corr):
     import matplotlib.pyplot as plt
 
-    fig = plt.figure(1, figsize=(10,12))
+    fig = plt.figure(1, figsize=(10,14))
     fig.canvas.set_window_title("ozone_reconstruction_2018_07")
     ax11 = plt.subplot(311)
     ax11.set_title('(a)')
